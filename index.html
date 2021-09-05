@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <title>Encrypt/Decrypt</title>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"
+    />
+    <script
+      type="text/javascript"
+      src="https://cdn.rawgit.com/ricmoo/aes-js/e27b99df/index.js"
+    ></script>
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <script type="text/javascript">
+      async function sha256(pass) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(pass);
+        const hash = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = new Uint8Array(hash);
+        return hashArray;
+      }
+      async function aesEncrypt(pass, text) {
+        const key = await sha256(pass);
+        const textBytes = aesjs.utils.utf8.toBytes(text);
+
+        const aesCtr = new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(5));
+        const encryptedBytes = aesCtr.encrypt(textBytes);
+
+        const encryptedHex = aesjs.utils.hex.fromBytes(encryptedBytes);
+        console.log(encryptedHex);
+        return encryptedHex;
+      }
+      async function aesDecrypt(pass, encryptedHex) {
+        const key = await sha256(pass);
+        const encryptedBytes = aesjs.utils.hex.toBytes(encryptedHex);
+        const aesCtr = new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(5));
+        const decryptedBytes = aesCtr.decrypt(encryptedBytes);
+        const decryptedText = aesjs.utils.utf8.fromBytes(decryptedBytes);
+        console.log(decryptedText);
+        return decryptedText;
+      }
+      async function testEncryption(pass, text) {
+        await aesDecrypt(pass, await aesEncrypt(pass, text));
+      }
+    </script>
+    <script type="text/javascript">
+      $(document).ready(() => {
+        $("#encrypt-submit").click(async () => {
+          console.log("submit");
+          const text = $("#text").val();
+          const pass = $("#encrypt-password").val();
+          const encryptedText = await aesEncrypt(pass, text);
+          $("#encrypt-response").val(encryptedText);
+        });
+        $("#decrypt-submit").click(async () => {
+          console.log("submit");
+          const text = $("#encrypted-text").val();
+          const pass = $("#decrypt-password").val();
+          const encryptedText = await aesDecrypt(pass, text);
+          $("#decrypt-response").val(encryptedText);
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div>
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Encrypt</h5>
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Text</span>
+            </div>
+            <textarea
+              id="text"
+              class="form-control"
+              aria-label="Text"
+            ></textarea>
+          </div>
+          <br />
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">password</span>
+            </div>
+            <input
+              id="encrypt-password"
+              type="encrypt-password"
+              class="form-control"
+              placeholder="password"
+              aria-label="password"
+              aria-describedby="password-encrypt"
+            />
+          </div>
+          <button id="encrypt-submit" type="submit" class="btn btn-primary">
+            Submit
+          </button>
+          <small id="encryptHelp" class="form-text text-muted"
+            >This will encrypt given text.</small
+          >
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Encrypted Text</span>
+            </div>
+            <textarea
+              id="encrypt-response"
+              class="form-control"
+              aria-label="Encrypted Text"
+              readonly
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    <br />
+    <div>
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Dencrypt</h5>
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Encrypted Text</span>
+            </div>
+            <textarea
+              id="encrypted-text"
+              class="form-control"
+              aria-label="Encrypted Text"
+            ></textarea>
+          </div>
+          <br />
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="basic-addon1">password</span>
+            </div>
+            <input
+              id="decrypt-password"
+              type="decrypt-password"
+              class="form-control"
+              placeholder="password"
+              aria-label="password"
+              aria-describedby="password-encrypt"
+            />
+          </div>
+          <button
+            id="decrypt-submit"
+            type="decrypt-submit"
+            class="btn btn-primary"
+          >
+            Submit
+          </button>
+          <small id="decryptHelp" class="form-text text-muted"
+            >This will dencrypt given encrypted text.</small
+          >
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Text</span>
+            </div>
+            <textarea
+              id="decrypt-response"
+              class="form-control"
+              aria-label="Text"
+              readonly
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
